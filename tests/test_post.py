@@ -73,5 +73,60 @@ def test_delete_post_forbidden(authorized_client, test_posts, test_user):
     new_user_response = authorized_client.post("/users/", json={"email": "newuser@example.com", "password": "password123"})
     assert new_user_response.status_code == 201
     new_user = new_user_response.json()
-    response = authorized_client.delete(f"/posts/{test_posts[2].id}",headers={"Authorization": f"Bearer {new_user['token']}"})
+    # login to obtain token for the new user
+    login_resp = authorized_client.post("/login/", data={"username": new_user['email'], "password": "password123"})
+    assert login_resp.status_code == 200
+    token = login_resp.json()["access_token"]
+    response = authorized_client.delete(f"/posts/{test_posts[2].id}", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 403
+
+def test_update_post(authorized_client, test_posts):
+    data={
+        "title": "Updated Title",
+        "content": "Updated Content",
+        "published": False
+    }
+    response = authorized_client.put(f"/posts/{test_posts[0].id}", json=data)
+    assert response.status_code == 200
+    updated_post = schema.Postresponse(**response.json())
+    assert updated_post.title == "Updated Title"
+    assert updated_post.content == "Updated Content"
+    assert updated_post.published == False
+
+def test_update_post_not_found(authorized_client):
+    data={
+        "title": "Updated Title",
+        "content": "Updated Content",
+        "published": False
+    }
+    response = authorized_client.put(f"/posts/9999", json=data)
+    assert response.status_code == 404
+
+def test_update_post_forbidden(authorized_client, test_posts, test_user):
+    # Create a new user
+    new_user_response = authorized_client.post("/users/", json={"email": "newuser@example.com",
+                                                                "password": "password123"})
+    assert new_user_response.status_code == 201
+    new_user = new_user_response.json()
+    # login to obtain token for the new user
+    login_resp = authorized_client.post("/login/", data={"username": new_user['email'],
+                                                            "password": "password123"})
+    assert login_resp.status_code == 200
+    token = login_resp.json()["access_token"]
+    data={
+        "title": "Updated Title",
+        "content": "Updated Content",
+        "published": False
+    }
+    response = authorized_client.put(f"/posts/{test_posts[1].id}", json=data,
+                                     headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 403
+
+def test_update_post_unauthorized_user(client, test_posts):
+    data={
+        "title": "Updated Title",
+        "content": "Updated Content",
+        "published": False
+    }
+    response = client.put(f"/posts/{test_posts[0].id}", json=data)
+    assert response.status_code == 401

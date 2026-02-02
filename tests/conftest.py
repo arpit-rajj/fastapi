@@ -24,11 +24,9 @@ def session():
 @pytest.fixture()
 def client(session):
     def override_get_db():
-        db = Test_SessionLocal()
-        try:
-            yield session
-        finally:
-            session.close()
+        # return the shared session from the `session` fixture without closing it here.
+        # The `session` fixture is responsible for closing at teardown.
+        yield session
     app.dependency_overrides[get_db] = override_get_db
     yield TestClient(app)
 
