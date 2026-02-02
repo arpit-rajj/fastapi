@@ -30,6 +30,7 @@ class Postresponse(BaseModel):
     content: str
     owner_id: int
     owner: userresponsemail
+    published: bool = True
     class Config:
         orm_mode = True
 
