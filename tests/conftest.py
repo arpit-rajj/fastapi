@@ -6,7 +6,10 @@ from app.main import app
 from app.databases import get_db
 import pytest
 
-SQLALCHEMY_TEST_DATABASE_URL = "postgresql://postgres:arpitraj%40020415@localhost:5432/test_db"
+
+from app.config import settings
+
+SQLALCHEMY_TEST_DATABASE_URL = f"postgresql://{settings.database_username}:{settings.database_password}@{settings.database_hostname}:{settings.database_port}/test_db"
 engine = create_engine(SQLALCHEMY_TEST_DATABASE_URL)
 Test_SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
