@@ -58,4 +58,8 @@ jobs:
         run: |
           pip install pytest
           pytest
-      
+      - name: Deploy to Render
+        # Only deploy if we are on 'main' and tests passed
+        if: github.ref == 'refs/heads/main' && job.status == 'success'
+        run: |
+          curl "${{secrets.RENDER_DEPLOY_HOOK}}"
